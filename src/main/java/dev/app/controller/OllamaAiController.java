@@ -3,10 +3,14 @@ package dev.app.controller;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.embedding.Embedding;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.retry.NonTransientAiException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -14,6 +18,9 @@ import java.util.Map;
 public class OllamaAiController {
 
     private final ChatClient chatClient;
+
+    @Autowired
+    private EmbeddingModel embeddingModel;
 
     public OllamaAiController(OllamaChatModel chatModel) {
         this.chatClient = ChatClient.create(chatModel);
@@ -33,6 +40,13 @@ public class OllamaAiController {
          }
     }
 
+    /**
+     * Get movie recommendations based on genre, year, and language.
+     * @param genre The genre of the movie.
+     * @param year The year the movie was released.
+     * @param language The language of the movie.
+     * @return A JSON string containing the recommended movie's title, length, cast, director, and IMDb rating.
+     */
     @PostMapping("/recommend")
     public String getMovieRecommendation(@RequestParam String genre, @RequestParam String year, @RequestParam String language) {
 
@@ -49,6 +63,17 @@ public class OllamaAiController {
                 .prompt(prompt)
                 .call()
                 .content();
+    }
+
+    /**
+     * Get embeddings for a given text.
+     * @param text The text to get embeddings for.
+     * @return An array of floats representing the embeddings of the text.
+     */
+    @PostMapping("/embeddings")
+    public float[] getEmbeddings(@RequestParam String text) {
+        return embeddingModel
+                .embed(text);
     }
 
 }
