@@ -20,7 +20,7 @@ public class OllamaAiController {
     }
 
     @GetMapping
-    public String getOllamaAiReponse(@RequestBody Map<String, String> prompt) {
+    public String getOllamaAiResponse(@RequestBody Map<String, String> prompt) {
         String response;
         try {
             response = chatClient
