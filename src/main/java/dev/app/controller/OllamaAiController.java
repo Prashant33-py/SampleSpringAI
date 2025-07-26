@@ -76,4 +76,29 @@ public class OllamaAiController {
                 .embed(text);
     }
 
+    /**
+     * Calculate the similarity between two texts using cosine similarity.<br/>
+     * Refer the link {@link https://docs.spring.io/spring-ai/reference/api/vectordbs/understand-vectordbs.html#vectordbs-similarity} for more details on cosine similarity.
+     *
+     * @param text1 The first text to compare.
+     * @param text2 The second text to compare.
+     * @return A double representing the cosine similarity between the two texts, scaled to a percentage.
+     */
+    @PostMapping("/similarity")
+    public double getSimilarity(@RequestParam String text1, @RequestParam String text2) {
+        float[] embedding1 = embeddingModel.embed(text1);
+        float[] embedding2 = embeddingModel.embed(text2);
+
+        double dotProduct = 0;
+        double norm1 = 0;
+        double norm2 = 0;
+
+        for (int i = 0; i < embedding1.length; i++) {
+            dotProduct += embedding1[i] * embedding2[i];
+            norm1 += embedding1[i] * embedding1[i];
+            norm2 += embedding2[i] * embedding2[i];
+        }
+        return (dotProduct * 100) / (Math.sqrt(norm1) * Math.sqrt(norm2));
+    }
+
 }
