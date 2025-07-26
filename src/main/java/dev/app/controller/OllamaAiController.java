@@ -1,13 +1,17 @@
 package dev.app.controller;
 
+import dev.app.model.Movie;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.ai.embedding.Embedding;
+import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.converter.ListOutputConverter;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -63,6 +67,56 @@ public class OllamaAiController {
                 .prompt(prompt)
                 .call()
                 .content();
+    }
+
+    @GetMapping("/recommend/movie-names")
+    public List<String> getMovieNames(@RequestParam String actorName) {
+        String template = """
+                List the top 10 movies of {actorName}
+                {format}
+                """;
+
+        ListOutputConverter converter = new ListOutputConverter(new DefaultConversionService());
+        PromptTemplate promptTemplate = new PromptTemplate(template);
+        Prompt prompt = promptTemplate.create(Map.of("actorName", actorName, "format", converter.getFormat()));
+
+        return converter.convert(chatClient
+                .prompt(prompt)
+                .call()
+                .content());
+    }
+
+    @GetMapping("/recommend/movie")
+    public Movie getMovieData(@RequestParam String actorName){
+        String template = """
+                Get me the best movie of {actorName}
+                {format}
+                """;
+
+        BeanOutputConverter<Movie> converter = new BeanOutputConverter<>(Movie.class);
+        PromptTemplate promptTemplate = new PromptTemplate(template);
+        Prompt prompt = promptTemplate.create(Map.of("actorName", actorName, "format", converter.getFormat()));
+
+        return converter.convert(chatClient
+                .prompt(prompt)
+                .call()
+                .content());
+
+    }
+
+    @GetMapping("/recommend/movies")
+    public List<Movie> getMoviesByActorName(@RequestParam String actorName) {
+        String template = """
+                Get me the top 5 movies of {actorName}
+                {format}
+                """;
+        BeanOutputConverter<List<Movie>> converter = new BeanOutputConverter<>(new ParameterizedTypeReference<List<Movie>>() {});
+        PromptTemplate promptTemplate = new PromptTemplate(template);
+        Prompt prompt = promptTemplate.create(Map.of("actorName", actorName, "format", converter.getFormat()));
+        return converter.convert(chatClient
+                .prompt(prompt)
+                .call()
+                .content());
     }
 
     /**
